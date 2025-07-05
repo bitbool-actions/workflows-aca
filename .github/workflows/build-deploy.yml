@@ -1,0 +1,100 @@
+name: build and deploy to azure container apps
+
+
+on:
+  workflow_call:
+    inputs:
+      AZURE_CLIENT_ID:
+        required: true
+        type: string
+      AZURE_ACR_NAME:
+        required: true
+        type: string
+      AZURE_ACR_REGISTRY:
+        required: true
+        type: string
+      AZURE_ACR_REPO:
+        required: true
+        type: string
+      USE_ENV_FILES:
+        required: false
+        default: "true"
+        type: string
+      RUNNER_TYPE:
+        required: false
+        default: "[self-hosted, linux]"
+        type: string
+
+
+jobs:
+
+  build-and-deploy:
+    name: "build and deploy to azure container apps"
+    concurrency: 
+      group: ${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ${{ inputs.RUNNER_TYPE }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+
+
+      - name: Read env
+        uses: bitbool-actions/read-env@main
+        id: read_env
+        with:
+          USE_ENV_FILES: "${{ inputs.USE_ENV_FILES }}"
+
+
+      - name: Set short sha to env
+        run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-7)" >> $GITHUB_ENV
+
+
+      - name: Log in to Azure 
+        run: |
+          az login --identity --client-id ${{ inputs.AZURE_CLIENT_ID }}
+
+
+      - name: Log in to Azure Container Registry
+        run: |
+          az acr login --name ${{ inputs.AZURE_ACR_NAME }}
+
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ inputs.AZURE_ACR_NAME }}.${{ inputs.AZURE_ACR_REGISTRY }}/${{ inputs.AZURE_ACR_REPO }}
+          flavor: |
+            latest=true
+          tags: |
+              type=sha,enable=true,priority=10000,prefix=,suffix=,format=short    
+              type=ref,priority=900,event=branch
+              type=ref,priority=800,event=pr
+              type=ref,priority=700,event=tag
+              type=semver,priority=600,pattern={{version}}
+              type=raw,priority=500,value={{date 'YYYYMMDD_HHMMSS'}}
+              type=sha,priority=400
+
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          push: false
+
+
+      - name: Push Docker image to ACR
+        run: |
+          docker push ${{ inputs.AZURE_ACR_NAME }}.${{ inputs.AZURE_ACR_REGISTRY }}/${{ inputs.AZURE_ACR_REPO }}:${GITHUB_SHA_SHORT}
+
+
+      - name: Deploy to Azure Container App
+        run: |
+          az containerapp update \
+            --name ${CONTAINER_APP_NAME} \
+            --resource-group ${RESOURCE_GROUP} \
+            --image ${{ inputs.AZURE_ACR_NAME }}.${{ inputs.AZURE_ACR_REGISTRY }}/${{ inputs.AZURE_ACR_REPO }}:${GITHUB_SHA_SHORT}
