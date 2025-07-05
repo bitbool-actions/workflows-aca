@@ -4,9 +4,6 @@ name: build and deploy to azure container apps
 on:
   workflow_call:
     inputs:
-      AZURE_CLIENT_ID:
-        required: true
-        type: string
       AZURE_ACR_NAME:
         required: true
         type: string
@@ -24,6 +21,9 @@ on:
         required: false
         default: "[self-hosted, linux]"
         type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
 
 
 jobs:
