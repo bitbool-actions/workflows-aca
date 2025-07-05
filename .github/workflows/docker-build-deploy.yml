@@ -1,0 +1,51 @@
+name: build and deploy to azure container apps
+
+on:
+  workflow_call:
+    inputs:
+      AZURE_ACR_NAME:
+        required: true
+        type: string
+      AZURE_ACR_REGISTRY:
+        required: true
+        type: string
+      AZURE_ACR_REPO:
+        required: true
+        type: string
+      USE_ENV_FILES:
+        required: false
+        default: "true"
+        type: string
+      RUNNER_TYPE:
+        required: false
+        default: "[self-hosted, linux]"
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+
+jobs:
+  build-and-deploy:
+    name: "build and deploy to azure container apps"
+    concurrency: 
+      group: ${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ${{ inputs.RUNNER_TYPE }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read env
+        uses: bitbool-actions/read-env@main
+        id: read_env
+        with:
+          USE_ENV_FILES: "${{ inputs.USE_ENV_FILES }}"
+
+      - name: docker aca deploy
+        uses: bitbool-actions/aca-docker-deploy@main
+        id: aca_deploy
+        with:
+          AZURE_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+          AZURE_ACR_NAME: "${{ inputs.AZURE_ACR_NAME }}"
+          AZURE_ACR_REGISTRY: "${{ inputs.AZURE_ACR_REGISTRY }}"
+          AZURE_ACR_REPO: "${{ inputs.AZURE_ACR_REPO }}"
