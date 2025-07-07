@@ -16,10 +16,10 @@ on:
         required: false
         default: "true"
         type: string
-      RUNNER_TYPE:
-        required: false
-        default: "[self-hosted, linux]"
-        type: string
+      # RUNNER_TYPE:
+      #   required: false
+      #   default: ""
+      #   type: string
       USE_YARN:
         required: false
         default: "false"
@@ -37,7 +37,7 @@ jobs:
     concurrency: 
       group: ${{ github.ref }}
       cancel-in-progress: true
-    runs-on: ${{ inputs.RUNNER_TYPE }}
+    runs-on: [self-hosted, linux]
 
     steps:
       - uses: actions/checkout@v3
