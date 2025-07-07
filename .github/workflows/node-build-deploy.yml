@@ -52,8 +52,8 @@ jobs:
         uses: bitbool-actions/node-build@master
         id: node_build
         with:
-          USE_YARN: "${{ env.USE_YARN }}"
-          NODE_VERSION: "${{ env.NODE_VERSION }}"
+          USE_YARN: "${{ inputs.USE_YARN }}"
+          NODE_VERSION: "${{ inputs.NODE_VERSION }}"
 
       - name: docker aca deploy
         uses: bitbool-actions/aca-docker-deploy@main
