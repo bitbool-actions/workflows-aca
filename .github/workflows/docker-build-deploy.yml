@@ -16,6 +16,10 @@ on:
         required: false
         default: "true"
         type: string
+      PREFIX_SHA_WITH_BRANCH:
+        required: false
+        default: "false"
+        type: string          
     secrets:
       AZURE_CLIENT_ID:
         required: true
