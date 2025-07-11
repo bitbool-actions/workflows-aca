@@ -45,3 +45,4 @@ jobs:
           AZURE_ACR_NAME: "${{ inputs.AZURE_ACR_NAME }}"
           AZURE_ACR_REGISTRY: "${{ inputs.AZURE_ACR_REGISTRY }}"
           AZURE_ACR_REPO: "${{ inputs.AZURE_ACR_REPO }}"
+          PREFIX_SHA_WITH_BRANCH: "${{ inputs.PREFIX_SHA_WITH_BRANCH }}"
